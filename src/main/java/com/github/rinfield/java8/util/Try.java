@@ -7,13 +7,22 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public interface Try<T> {
+public interface Try<T, X extends Throwable> {
 
-    public enum Type {
+    public enum Result {
         SUCCESS, FAILURE;
+
+        public boolean isSuccess() {
+            return this == SUCCESS ? true : false;
+        }
+
+        public boolean isFailure() {
+            return !isSuccess();
+        }
     }
 
-    public static final class Success<T> implements Try<T> {
+    public static final class Success<T, X extends Throwable> implements
+        Try<T, X> {
         private final T value;
 
         private Success(final T value) {
@@ -26,8 +35,18 @@ public interface Try<T> {
         }
 
         @Override
-        public Throwable getException() {
+        public X getException() {
             throw new NoSuchElementException();
+        }
+
+        @Override
+        public Result resultType() {
+            return Result.SUCCESS;
+        }
+
+        @Override
+        public boolean isPresent() {
+            return value != null;
         }
 
         @Override
@@ -36,42 +55,53 @@ public interface Try<T> {
         }
 
         @Override
-        public <X extends Throwable> T orElseThrow(
-            final Function<? super Throwable, X> mapper) throws X {
+        public <Y extends Throwable> T orElseThrow(
+            final Function<? super X, ? extends Y> mapper) throws Y {
             return value;
         }
 
         @Override
-        public T orElseMap(final Function<? super Throwable, ? extends T> mapper) {
+        public T orElseCatch(final Function<? super X, ? extends T> mapper) {
             return value;
         }
 
         @Override
-        public void ifPresent(final Consumer<? super T> consumer) {
+        public void ifSuccess(final Consumer<? super T> consumer) {
             consumer.accept(value);
         }
 
         @Override
-        public void ifFailure(final Consumer<? super Throwable> consumer) {
+        public void ifSuccess(final Runnable runnable) {
+            runnable.run();
         }
 
         @Override
-        public boolean isSuccess() {
-            return true;
+        public void ifPresent(final Consumer<? super T> consumer) {
+            if (isPresent()) {
+                ifSuccess(consumer);
+            }
         }
 
         @Override
-        public Try<T> filter(final Predicate<? super T> predicate) {
-            return predicate.test(value) ? this : new Failure<>();
+        public void ifFailure(final Consumer<? super X> consumer) {
         }
 
         @Override
-        public <U> Try<U> map(final Function<? super T, ? extends U> mapper) {
+        public void ifFailure(final Runnable runnable) {
+        }
+
+        @Override
+        public Try<T, X> filter(final Predicate<? super T> predicate) {
+            return predicate.test(value) ? this : new Failure<>(null);
+        }
+
+        @Override
+        public <U> Try<U, X> map(final Function<? super T, ? extends U> mapper) {
             return new Try.Success<>(mapper.apply(value));
         }
 
         @Override
-        public <U> Try<U> flatMap(final Function<? super T, Try<U>> mapper) {
+        public <U> Try<U, X> flatMap(final Function<? super T, Try<U, X>> mapper) {
             return mapper.apply(value);
         }
 
@@ -79,23 +109,15 @@ public interface Try<T> {
         public Optional<T> toOption() {
             return Optional.of(value);
         }
-
-        @Override
-        public Try.Type type() {
-            return Type.SUCCESS;
-        }
     }
 
-    public static final class Failure<T> implements Try<T> {
+    public static final class Failure<T, X extends Throwable> implements
+        Try<T, X> {
 
-        private final Throwable exception;
+        private final X exception;
 
-        private Failure(final Throwable exception) {
+        private Failure(final X exception) {
             this.exception = exception;
-        }
-
-        private Failure() {
-            this(new NoSuchElementException());
         }
 
         @Override
@@ -104,8 +126,18 @@ public interface Try<T> {
         }
 
         @Override
-        public Throwable getException() {
+        public X getException() {
             return exception;
+        }
+
+        @Override
+        public Result resultType() {
+            return Result.FAILURE;
+        }
+
+        @Override
+        public boolean isPresent() {
+            return false;
         }
 
         @Override
@@ -114,14 +146,22 @@ public interface Try<T> {
         }
 
         @Override
-        public <X extends Throwable> T orElseThrow(
-            final Function<? super Throwable, X> mapper) throws X {
+        public <Y extends Throwable> T orElseThrow(
+            final Function<? super X, ? extends Y> mapper) throws Y {
             throw mapper.apply(exception);
         }
 
         @Override
-        public T orElseMap(final Function<? super Throwable, ? extends T> mapper) {
+        public T orElseCatch(final Function<? super X, ? extends T> mapper) {
             return mapper.apply(exception);
+        }
+
+        @Override
+        public void ifSuccess(final Consumer<? super T> consumer) {
+        }
+
+        @Override
+        public void ifSuccess(final Runnable runnable) {
         }
 
         @Override
@@ -129,58 +169,65 @@ public interface Try<T> {
         }
 
         @Override
-        public void ifFailure(final Consumer<? super Throwable> consumer) {
+        public void ifFailure(final Consumer<? super X> consumer) {
             consumer.accept(exception);
         }
 
         @Override
-        public boolean isSuccess() {
-            return false;
+        public void ifFailure(final Runnable procedure) {
+            procedure.run();
         }
 
         @Override
-        public Try<T> filter(final Predicate<? super T> predicate) {
+        public Try<T, X> filter(final Predicate<? super T> predicate) {
             return this;
         }
 
         @SuppressWarnings("unchecked")
         @Override
-        public <U> Try<U> map(final Function<? super T, ? extends U> mapper) {
-            return (Try<U>) this;
+        public <U> Try<U, X> map(final Function<? super T, ? extends U> mapper) {
+            return (Try<U, X>) this;
         }
 
         @SuppressWarnings("unchecked")
         @Override
-        public <U> Try<U> flatMap(final Function<? super T, Try<U>> mapper) {
-            return (Try<U>) this;
+        public <U> Try<U, X> flatMap(final Function<? super T, Try<U, X>> mapper) {
+            return (Try<U, X>) this;
         }
 
         @Override
         public Optional<T> toOption() {
             return Optional.empty();
         }
-
-        @Override
-        public Try.Type type() {
-            return Type.FAILURE;
-        }
     }
 
-    public static <T> Try<T> success(final T t) {
+    static <T, X extends Throwable> Try<T, X> success(final T t) {
         return new Success<>(t);
     }
 
-    static <T> Try<T> failure(final Throwable e) {
-        return new Failure<>(e);
+    static <X extends Throwable> Try<Void, X> success() {
+        return new Success<>(null);
     }
 
-    static <T> Try<T> failure() {
-        return new Failure<>();
+    static <T, X extends Throwable> Try<T, X> failure(final X e) {
+        return new Failure<>(e);
     }
 
     T get();
 
-    Throwable getException();
+    X getException();
+
+    Result resultType();
+
+    default boolean isSuccess() {
+        return resultType().isSuccess();
+    }
+
+    default boolean isFailure() {
+        return resultType().isFailure();
+    }
+
+    boolean isPresent();
 
     T orElseGet(final Supplier<? extends T> other);
 
@@ -188,14 +235,22 @@ public interface Try<T> {
         return orElseGet(() -> other);
     }
 
-    <X extends Throwable> T orElseThrow(Function<? super Throwable, X> mapper)
-        throws X;
+    <Y extends Throwable> T orElseThrow(Function<? super X, ? extends Y> mapper)
+        throws Y;
+
+    default T orElseThrow() throws X {
+        return orElseThrow(x -> x);
+    }
 
     default T orElseThrowUnchecked() {
         return orElseThrow(e -> new RuntimeException(e));
     }
 
-    T orElseMap(Function<? super Throwable, ? extends T> mapper);
+    T orElseCatch(Function<? super X, ? extends T> mapper);
+
+    void ifSuccess(final Consumer<? super T> consumer);
+
+    void ifSuccess(final Runnable runnable);
 
     void ifPresent(final Consumer<? super T> consumer);
 
@@ -203,25 +258,15 @@ public interface Try<T> {
         ifPresent(consumer);
     }
 
-    void ifFailure(final Consumer<? super Throwable> consumer);
+    void ifFailure(final Consumer<? super X> consumer);
 
-    boolean isSuccess();
+    void ifFailure(final Runnable runnable);
 
-    default boolean isPresent() {
-        return isSuccess();
-    }
+    Try<T, X> filter(final Predicate<? super T> predicate);
 
-    default boolean isFailure() {
-        return !isSuccess();
-    }
+    <U> Try<U, X> map(final Function<? super T, ? extends U> mapper);
 
-    Try<T> filter(final Predicate<? super T> predicate);
-
-    <U> Try<U> map(final Function<? super T, ? extends U> mapper);
-
-    <U> Try<U> flatMap(final Function<? super T, Try<U>> mapper);
+    <U> Try<U, X> flatMap(final Function<? super T, Try<U, X>> mapper);
 
     Optional<T> toOption();
-
-    Type type();
 }

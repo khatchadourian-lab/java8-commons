@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -14,12 +15,10 @@ import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
-import com.github.rinfield.java8.function.ThrowingFunction;
-
 @RunWith(Enclosed.class)
 public class ThrowingFunctionTest {
     interface Stub {
-        String get() throws Exception; // <- checked Exception
+        String get() throws IOException; // <- checked Exception
     }
 
     public static class RethrowTests extends TestCommon {
@@ -179,51 +178,55 @@ public class ThrowingFunctionTest {
 
     public static class OnFailTests extends TestCommon {
         static final String ON_FAIL = "on fail";
-        static final Function<Throwable, String> onFail = t -> ON_FAIL;
-        static final Function<Throwable, Integer> onFailInt = t -> -1;
+        static final Function<IOException, String> onFail = t -> ON_FAIL;
+        static final Function<IOException, Integer> onFailInt = t -> -1;
 
         @Test
         public void okStreamMap() {
-            assertThat(ok1.map(stubGet.catches(onFail)).toArray(),
+            assertThat(ok1.map(stubGet.orElseCatch(onFail)).toArray(),
                 is(arrayContaining(OK)));
-            assertThat(ok2.map(stubGet.catches(onFail)).toArray(),
+            assertThat(ok2.map(stubGet.orElseCatch(onFail)).toArray(),
                 is(arrayContaining(OK, OK)));
         }
 
         @Test
         public void okStreamMapWithFail() {
-            assertThat(ng1.map(stubGet.catches(onFail)).toArray(),
+            assertThat(ng1.map(stubGet.orElseCatch(onFail)).toArray(),
                 is(arrayContaining(ON_FAIL)));
-            assertThat(ng2.map(stubGet.catches(onFail)).toArray(),
+            assertThat(ng2.map(stubGet.orElseCatch(onFail)).toArray(),
                 is(arrayContaining(ON_FAIL, ON_FAIL)));
-            assertThat(okNg.map(stubGet.catches(onFail)).toArray(),
+            assertThat(okNg.map(stubGet.orElseCatch(onFail)).toArray(),
                 is(arrayContaining(OK, ON_FAIL)));
-            assertThat(ngOk.map(stubGet.catches(onFail)).toArray(),
+            assertThat(ngOk.map(stubGet.orElseCatch(onFail)).toArray(),
                 is(arrayContaining(ON_FAIL, OK)));
         }
 
         @Test
         public void okCompose() throws Exception {
-            assertThat(stubGet.compose(beforeOk).catches(onFail)
-                .apply(COMPOSED), is(COMPOSED));
+            assertThat(
+                stubGet.compose(beforeOk).orElseCatch(onFail).apply(COMPOSED),
+                is(COMPOSED));
         }
 
         @Test
         public void okComposeWithFail() throws Exception {
-            assertThat(stubGet.compose(beforeNg).catches(onFail)
-                .apply(COMPOSED), is(ON_FAIL));
+            assertThat(
+                stubGet.compose(beforeNg).orElseCatch(onFail).apply(COMPOSED),
+                is(ON_FAIL));
         }
 
         @Test
         public void okAndThen() throws Exception {
-            assertThat(stubGet.andThen(afterOk).catches(onFailInt)
-                .apply(okStub), is(2));
+            assertThat(
+                stubGet.andThen(afterOk).orElseCatch(onFailInt).apply(okStub),
+                is(2));
         }
 
         @Test
         public void okAndThenWithFail() throws Exception {
-            assertThat(stubGet.andThen(afterNg).catches(onFailInt)
-                .apply(okStub), is(-1));
+            assertThat(
+                stubGet.andThen(afterNg).orElseCatch(onFailInt).apply(okStub),
+                is(-1));
         }
     }
 
@@ -235,15 +238,17 @@ public class ThrowingFunctionTest {
         Stream<Stub> okNg;
         Stream<Stub> ngOk;
 
-        final ThrowingFunction<Stub, String> stubGet = s -> s.get();
+        final ThrowingFunction<Stub, String, IOException> stubGet = s -> s
+            .get();
 
-        final ThrowingFunction<String, Stub> beforeOk = s -> () -> s;
-        final ThrowingFunction<String, Stub> beforeNg = s -> () -> {
-            throw new Exception();
+        final ThrowingFunction<String, Stub, IOException> beforeOk = s -> () -> s;
+        final ThrowingFunction<String, Stub, IOException> beforeNg = s -> () -> {
+            throw new IOException();
         };
-        final ThrowingFunction<String, Integer> afterOk = s -> s.length();
-        final ThrowingFunction<String, Integer> afterNg = s -> {
-            throw new Exception();
+        final ThrowingFunction<String, Integer, IOException> afterOk = s -> s
+            .length();
+        final ThrowingFunction<String, Integer, IOException> afterNg = s -> {
+            throw new IOException();
         };
 
         static final String OK = "OK";
@@ -251,7 +256,7 @@ public class ThrowingFunctionTest {
 
         static final Stub okStub = () -> OK;
         static final Stub ngStub = () -> {
-            throw new RuntimeException();
+            throw new IOException();
         };
 
         @Before
