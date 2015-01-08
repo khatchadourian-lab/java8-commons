@@ -1,8 +1,9 @@
 package com.github.rinfield.java8.stream;
 
-import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+import com.github.rinfield.java8.util.Tuple;
 
 public interface StreamExtInter<T> {
     Stream<T> stream();
@@ -13,7 +14,7 @@ public interface StreamExtInter<T> {
 
     Streamz<T> append(T other);
 
-    Streamz<Map.Entry<T, Integer>> zipWithIndex(); // TODO Tuple
+    Streamz<Tuple<T, Integer>> zipWithIndex();
 
     Streamz<T> takeWhile(Predicate<T> predicate);
 

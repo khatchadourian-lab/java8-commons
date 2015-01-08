@@ -1,10 +1,8 @@
 package com.github.rinfield.java8.stream;
 
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,6 +23,8 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
+
+import com.github.rinfield.java8.util.Tuple;
 
 public class StreamzImpl<T> implements Streamz<T> {
 
@@ -66,15 +66,10 @@ public class StreamzImpl<T> implements Streamz<T> {
     }
 
     @Override
-    public Streamz<Entry<T, Integer>> zipWithIndex() {
-        return Streamz.of(stream.map(new Function<T, Entry<T, Integer>>() {
-            private final AtomicInteger atomicInt = new AtomicInteger(0);
-
-            @Override
-            public Entry<T, Integer> apply(final T t) {
-                return new SimpleEntry<>(t, atomicInt.getAndIncrement());
-            }
-        }));
+    public Streamz<Tuple<T, Integer>> zipWithIndex() {
+        final AtomicInteger atomicInt = new AtomicInteger(0);
+        return Streamz.of(stream.map(t -> Tuple.of(t,
+            atomicInt.getAndIncrement())));
     }
 
     @Override
