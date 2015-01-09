@@ -1,4 +1,4 @@
-package com.github.rinfield.java8.stream;
+package com.github.rinfield.java8.stream.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,26 +6,28 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class FlatMapz {
+import com.github.rinfield.java8.stream.FiniteStream;
 
-    public static <T> Function<T, Stream<Streamz<T>>> grouped(final int step) {
+public class Functionz {
+
+    public static <T> Function<T, Stream<FiniteStream<T>>> grouped(final int step) {
         return new GroupingFunction<>(step, Optional.empty(), Optional.empty());
     }
 
-    public static <T> Function<T, Stream<Streamz<T>>> grouped(final int step,
-        final int streamSize) {
+    public static <T> Function<T, Stream<FiniteStream<T>>> grouped(
+        final int step, final int streamSize) {
         return new GroupingFunction<>(step, Optional.of(streamSize),
             Optional.empty());
     }
 
-    public static <T> Function<T, Stream<Streamz<T>>> grouped(final int step,
-        final int streamSize, final T padding) {
+    public static <T> Function<T, Stream<FiniteStream<T>>> grouped(
+        final int step, final int streamSize, final T padding) {
         return new GroupingFunction<>(step, Optional.of(streamSize),
             Optional.of(padding));
     }
 
     public static class GroupingFunction<T> implements
-        Function<T, Stream<Streamz<T>>> {
+        Function<T, Stream<FiniteStream<T>>> {
 
         private final int step;
         private int currentIndex;
@@ -43,7 +45,7 @@ public class FlatMapz {
         }
 
         @Override
-        public Stream<Streamz<T>> apply(final T t) {
+        public Stream<FiniteStream<T>> apply(final T t) {
             final boolean isFilled = append(t);
             final boolean isLastElem = streamSizeOpt.filter(
                 i -> i == consumedTotal).isPresent();
@@ -52,7 +54,7 @@ public class FlatMapz {
                     append(paddingOpt.get());
                 }
             }
-            return (isFilled || isLastElem) ? Stream.of(Streamz
+            return (isFilled || isLastElem) ? Stream.of(FiniteStream
                 .of(getAndReset().stream())) : Stream.empty();
         }
 
@@ -70,5 +72,4 @@ public class FlatMapz {
             return currentIndex >= step;
         }
     }
-
 }

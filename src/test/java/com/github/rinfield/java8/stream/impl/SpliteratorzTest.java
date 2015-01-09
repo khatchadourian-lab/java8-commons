@@ -1,4 +1,4 @@
-package com.github.rinfield.java8.stream;
+package com.github.rinfield.java8.stream.impl;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.arrayContaining;
@@ -21,15 +21,14 @@ public class SpliteratorzTest {
 
     @Test
     public void takeWhileTest() {
-        assertThat(Spliteratorz.takeWhile(finiteStream(), (i) -> i != 5).toArray(),
-            is(arrayContaining(1, 2, 3, 4)));
+        assertThat(Spliteratorz.takeWhile(finiteStream(), (i) -> i != 5)
+            .toArray(), is(arrayContaining(1, 2, 3, 4)));
 
-        assertThat(Spliteratorz.takeWhile(finiteStream(), (i) -> i != 10).toArray(),
-            is(arrayContaining(1, 2, 3, 4, 5, 6, 7, 8)));
+        assertThat(Spliteratorz.takeWhile(finiteStream(), (i) -> i != 10)
+            .toArray(), is(arrayContaining(1, 2, 3, 4, 5, 6, 7, 8)));
 
-        assertThat(
-            Spliteratorz.takeWhile(infiniteStream(), (i) -> i != 5).toArray(),
-            is(arrayContaining(1, 2, 3, 4)));
+        assertThat(Spliteratorz.takeWhile(infiniteStream(), (i) -> i != 5)
+            .toArray(), is(arrayContaining(1, 2, 3, 4)));
     }
 
     @Test

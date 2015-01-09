@@ -1,6 +1,6 @@
-package com.github.rinfield.java8.stream;
+package com.github.rinfield.java8.stream.impl;
 
-import static com.github.rinfield.java8.stream.FlatMapz.grouped;
+import static com.github.rinfield.java8.stream.impl.Functionz.grouped;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
-public class FlatMapsTest {
+public class FuntionzTest {
 
     @Test
     public void groupTest() {

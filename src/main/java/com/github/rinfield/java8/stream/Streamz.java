@@ -9,55 +9,51 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-import java.util.stream.BaseStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public interface Streamz<T> extends BaseStream<T, Streamz<T>>,
-    StreamExtTerm<T>, StreamExtTermShort<T>, StreamExtInter<T>,
-    StreamCompatTerm<T>, StreamCompatTermShort<T>, StreamCompatInter<T> {
-
-    static <T> Streamz<T> of(final Stream<T> stream) {
-        return new StreamzImpl<>(stream);
+public final class Streamz {
+    public static <T> InfiniteStream<T> of(final Stream<T> stream) {
+        return InfiniteStream.of(stream);
     }
 
-    static <T> Streamz<T> of(final Collection<T> collection) {
-        return of(collection.stream());
+    public static <T> FiniteStream<T> of(final Collection<T> collection) {
+        return FiniteStream.of(collection.stream());
     }
 
-    static <K, V> Streamz<Map.Entry<K, V>> of(final Map<K, V> map) {
+    public static <K, V> FiniteStream<Map.Entry<K, V>> of(final Map<K, V> map) {
         return of(map.entrySet());
     }
 
-    static <T> Streamz<T> of(final Enumeration<T> enumeration) {
-        return of(Collections.list(enumeration).stream());
+    public static <T> FiniteStream<T> of(final Enumeration<T> enumeration) {
+        return of(Collections.list(enumeration));
     }
 
-    static <T> Streamz<T> of(final Iterator<T> iterator) {
+    public static <T> InfiniteStream<T> of(final Iterator<T> iterator) {
         return of(StreamSupport.stream(
             Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED),
             false));
     }
 
     @SuppressWarnings("unchecked")
-    static <T> Streamz<T> of(final T... values) {
-        return of(Stream.of(values));
+    public static <T> FiniteStream<T> of(final T... values) {
+        return FiniteStream.of(Stream.of(values));
     }
 
-    static <T> Streamz<T> of(final T value) {
-        return of(Stream.of(value));
+    public static <T> FiniteStream<T> of(final T value) {
+        return FiniteStream.of(Stream.of(value));
     }
 
-    static <T> Streamz<T> empty() {
-        return of(Stream.empty());
+    public static <T> FiniteStream<T> empty() {
+        return FiniteStream.of(Stream.empty());
     }
 
-    static <T> Streamz<T> generate(final Supplier<T> s) {
+    public static <T> InfiniteStream<T> generate(final Supplier<T> s) {
         return of(Stream.generate(s));
     }
 
-    static <T> Streamz<T> iterate(final T seed, final UnaryOperator<T> f) {
+    public static <T> InfiniteStream<T> iterate(final T seed,
+        final UnaryOperator<T> f) {
         return of(Stream.iterate(seed, f));
     }
-
 }

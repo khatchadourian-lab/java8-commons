@@ -1,4 +1,4 @@
-package com.github.rinfield.java8.stream;
+package com.github.rinfield.java8.stream.impl;
 
 import java.util.Iterator;
 import java.util.Optional;
