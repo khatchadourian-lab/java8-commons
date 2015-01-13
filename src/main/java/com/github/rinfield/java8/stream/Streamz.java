@@ -14,6 +14,8 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import com.github.rinfield.java8.function.ThrowingFunction;
+import com.github.rinfield.java8.function.ThrowingSupplier;
 import com.github.rinfield.java8.util.Tuple;
 
 public final class Streamz {
@@ -33,6 +35,11 @@ public final class Streamz {
 
     public static <T> InfiniteStream<T> generate(final Supplier<T> s) {
         return of(Stream.generate(s));
+    }
+
+    public static <T> InfiniteStream<T> generateSuppress(
+        final ThrowingSupplier<T, ?> s) {
+        return generate(s.rethrow());
     }
 
     public static <T> InfiniteStream<T> iterate(final T seed,
@@ -66,6 +73,11 @@ public final class Streamz {
     public static <T, S> InfiniteStream<T> generate(final S seed,
         final Function<S, T> f) {
         return generate(() -> f.apply(seed));
+    }
+
+    public static <T, S> InfiniteStream<T> generateSuppress(final S seed,
+        final ThrowingFunction<S, T, ?> f) {
+        return generate(() -> f.rethrow().apply(seed));
     }
 
     public static InfiniteStream<Void> loop() {
