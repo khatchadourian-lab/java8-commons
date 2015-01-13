@@ -1,4 +1,4 @@
-# java8-commons
+# java8-commons [![Build Status](https://travis-ci.org/rinfield/java8-commons.svg?branch=master)](https://travis-ci.org/rinfield/java8-commons)
 
 The standard Java8 libraries fail to provide enough methods for manipulation of
  its core classes. java8-commons provides extra classes and methods.
