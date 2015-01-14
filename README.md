@@ -76,6 +76,54 @@ Above sample code is pretty much equivalent to ancient codes below:
 
 
 ### How to use
+#### Use Maven3 to add dependency
+You need to configure `pom.xml` to add java8-commons as dependency.
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>sample-app</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <dependencies>
+    <!-- Add java8-commons dependency -->
+    <dependency>
+      <groupId>com.github.rinfield</groupId>
+      <artifactId>java8-commons</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+  <repositories>
+    <!-- Add jfrog oss snapshot repository -->
+    <repository>
+      <id>oss-jfrog-artifactory-snapshots</id>
+      <name>oss-jfrog-artifactory-snapshots</name>
+      <url>http://oss.jfrog.org/artifactory/oss-snapshot-local</url>
+    </repository>
+  </repositories>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <java.version>1.8</java.version>
+  </properties>
+  <build>
+    <plugins>
+      <!-- compile as Java8 source -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.2</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+```
+
+
 #### Instantiation (`Streamz` Factory Class)
 ```java
 import com.github.rinfield.java8.stream.Streamz;
