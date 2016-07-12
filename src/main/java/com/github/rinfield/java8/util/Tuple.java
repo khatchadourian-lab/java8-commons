@@ -29,11 +29,6 @@ public class Tuple<T1, T2> extends AbstractProduct {
     }
 
     @Override
-    public int arity() {
-        return 2;
-    }
-
-    @Override
     public Object[] array() {
         return new Object[] { _1, _2 };
     }

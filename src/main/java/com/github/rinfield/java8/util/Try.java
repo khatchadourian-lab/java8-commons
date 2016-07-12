@@ -7,6 +7,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import com.github.rinfield.java8.util.Try.Result;
+
 public interface Try<T, X extends Throwable> {
 
     public enum Result {
@@ -32,11 +34,6 @@ public interface Try<T, X extends Throwable> {
         @Override
         public T get() {
             return value;
-        }
-
-        @Override
-        public X getException() {
-            throw new NoSuchElementException();
         }
 
         @Override
@@ -68,11 +65,6 @@ public interface Try<T, X extends Throwable> {
         @Override
         public void ifSuccess(final Consumer<? super T> consumer) {
             consumer.accept(value);
-        }
-
-        @Override
-        public void ifSuccess(final Runnable runnable) {
-            runnable.run();
         }
 
         @Override
@@ -121,23 +113,8 @@ public interface Try<T, X extends Throwable> {
         }
 
         @Override
-        public T get() {
-            throw new NoSuchElementException();
-        }
-
-        @Override
         public X getException() {
             return exception;
-        }
-
-        @Override
-        public Result resultType() {
-            return Result.FAILURE;
-        }
-
-        @Override
-        public boolean isPresent() {
-            return false;
         }
 
         @Override
@@ -174,11 +151,6 @@ public interface Try<T, X extends Throwable> {
         }
 
         @Override
-        public void ifFailure(final Runnable procedure) {
-            procedure.run();
-        }
-
-        @Override
         public Try<T, X> filter(final Predicate<? super T> predicate) {
             return this;
         }
@@ -194,11 +166,6 @@ public interface Try<T, X extends Throwable> {
         public <U> Try<U, X> flatMap(final Function<? super T, Try<U, X>> mapper) {
             return (Try<U, X>) this;
         }
-
-        @Override
-        public Optional<T> toOption() {
-            return Optional.empty();
-        }
     }
 
     static <T, X extends Throwable> Try<T, X> success(final T t) {
@@ -213,11 +180,17 @@ public interface Try<T, X extends Throwable> {
         return new Failure<>(e);
     }
 
-    T get();
+    default T get() {
+	    throw new NoSuchElementException();
+	}
 
-    X getException();
+    default X getException() {
+	    throw new NoSuchElementException();
+	}
 
-    Result resultType();
+    default Result resultType() {
+	    return Result.FAILURE;
+	}
 
     default boolean isSuccess() {
         return resultType().isSuccess();
@@ -227,7 +200,9 @@ public interface Try<T, X extends Throwable> {
         return resultType().isFailure();
     }
 
-    boolean isPresent();
+    default boolean isPresent() {
+	    return false;
+	}
 
     T orElseGet(final Supplier<? extends T> other);
 
@@ -250,7 +225,9 @@ public interface Try<T, X extends Throwable> {
 
     void ifSuccess(final Consumer<? super T> consumer);
 
-    void ifSuccess(final Runnable runnable);
+    default void ifSuccess(final Runnable runnable) {
+	    runnable.run();
+	}
 
     void ifPresent(final Consumer<? super T> consumer);
 
@@ -260,7 +237,9 @@ public interface Try<T, X extends Throwable> {
 
     void ifFailure(final Consumer<? super X> consumer);
 
-    void ifFailure(final Runnable runnable);
+    default void ifFailure(final Runnable procedure) {
+	    procedure.run();
+	}
 
     Try<T, X> filter(final Predicate<? super T> predicate);
 
@@ -268,5 +247,7 @@ public interface Try<T, X extends Throwable> {
 
     <U> Try<U, X> flatMap(final Function<? super T, Try<U, X>> mapper);
 
-    Optional<T> toOption();
+    default Optional<T> toOption() {
+	    return Optional.empty();
+	}
 }

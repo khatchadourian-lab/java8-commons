@@ -6,7 +6,9 @@ import java.util.stream.Stream;
 
 public interface Product {
 
-    int arity();
+    default int arity() {
+	    return 2;
+	}
 
     Object[] array();
 
